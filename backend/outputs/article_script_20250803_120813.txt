@@ -1,0 +1,19 @@
+Title: What is a Vector Database & How Does it Work? Use Cases + Examples
+URL: https://www.pinecone.io/learn/vector-database/
+
+Ye kya bakchodi hai? Samajh nahi aa raha yaar!  Vector database?  Kya yeh koi naya sabzi ka naam hai?
+
+
+Dekho bhai, simple hai na!  Yeh ek database hai, lekin yeh numbers aur words nahi, vectors store karta hai. Chess mein bolte hai na,  each piece has a different value and position?  Vectors bhi aise hi hain.
+
+
+Arre yaar!  Vectors?  Mere ghar ke saare vectors toh kisi aur ke paas chale gaye!  Rent nahi de rahe! Dimag kharab kar diya inhone!
+
+
+Samjha?  Yeh  AI ke liye  important hai.  Imagine,  chessboard pe ek pawn  dusre pawn se similar hai na?  Yeh database  aise hi similar vectors dhundhta hai,  lightning fast!
+
+
+Pareshaan kar diya!  Lightning fast?  Mere ghar ka bijli ka bill toh kabhi lightning fast nahi aata!  Yeh kya strategy hai?
+
+
+Logic hai na bhai!  Is article mein itni bakchodi hai,  mujhe toh  samajh hi nahi aaya.  Kya baat kar rahe ho aap log?  Sirf pareshani badhti jaa rahi hai!

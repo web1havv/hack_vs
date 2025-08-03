@@ -1,0 +1,38 @@
+[
+  {
+    "speaker": "trump",
+    "start_time": 0.0,
+    "end_time": 9.5,
+    "text": "Ye kya bakchodi hai? Samajh nahi aa raha yaar!  Vector database?  Kya yeh koi naya sabzi ka naam hai?"
+  },
+  {
+    "speaker": "elon",
+    "start_time": 9.7,
+    "end_time": 28.2,
+    "text": "Dekho bhai, simple hai na!  Yeh ek database hai, lekin yeh numbers aur words nahi, vectors store karta hai. Chess mein bolte hai na,  each piece has a different value and position?  Vectors bhi aise hi hain."
+  },
+  {
+    "speaker": "trump",
+    "start_time": 28.4,
+    "end_time": 40.4,
+    "text": "Arre yaar!  Vectors?  Mere ghar ke saare vectors toh kisi aur ke paas chale gaye!  Rent nahi de rahe! Dimag kharab kar diya inhone!"
+  },
+  {
+    "speaker": "elon",
+    "start_time": 40.599999999999994,
+    "end_time": 54.599999999999994,
+    "text": "Samjha?  Yeh  AI ke liye  important hai.  Imagine,  chessboard pe ek pawn  dusre pawn se similar hai na?  Yeh database  aise hi similar vectors dhundhta hai,  lightning fast!"
+  },
+  {
+    "speaker": "trump",
+    "start_time": 54.8,
+    "end_time": 65.3,
+    "text": "Pareshaan kar diya!  Lightning fast?  Mere ghar ka bijli ka bill toh kabhi lightning fast nahi aata!  Yeh kya strategy hai?"
+  },
+  {
+    "speaker": "elon",
+    "start_time": 65.5,
+    "end_time": 80.0,
+    "text": "Logic hai na bhai!  Is article mein itni bakchodi hai,  mujhe toh  samajh hi nahi aaya.  Kya baat kar rahe ho aap log?  Sirf pareshani badhti jaa rahi hai!"
+  }
+]

@@ -172,7 +172,12 @@ class CaptionProcessor:
             enhanced_segments = []
             all_captions = []
             total_duration = 0
-            speaker_stats = {"elon": {"duration": 0, "words": 0}, "trump": {"duration": 0, "words": 0}}
+            speaker_stats = {
+                "elon": {"duration": 0, "words": 0}, 
+                "trump": {"duration": 0, "words": 0},
+                "baburao": {"duration": 0, "words": 0},
+                "samay": {"duration": 0, "words": 0}
+            }
             
             for segment in timeline:
                 speaker = segment['speaker']
