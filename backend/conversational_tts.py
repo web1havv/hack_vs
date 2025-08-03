@@ -529,4 +529,4 @@ def create_speaker_timeline(script_text, speaker_pair="trump_elon"):
         
     except Exception as e:
         logger.error(f"❌ Failed to create speaker timeline: {str(e)}")
-        raise Exception(f"Failed to create speaker timeline: {str(e)}") 
+        raise Exception(f"Failed to create speaker timelinsse: {str(e)}") 
