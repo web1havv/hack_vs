@@ -1,0 +1,14 @@
+Title: What is a Vector Database?
+URL: https://aws.amazon.com/what-is/vector-databases/
+
+What the hell is a vector database?  It sounds like some damn commie plot, believe me.
+
+It's like… imagine your brain, right?  It stores memories as…  vectors.  Think of them as arrows pointing in different directions.  Similar memories are close together.  This database does that with data, damn it.  It's fucking incredible, actually.
+
+So, it's like my tremendous rallies?  All the people, the energy… vectors of… winning!  The best rallies, believe me.
+
+No, it's not about rallies, it's about finding similar things, like finding similar images on your phone.  It's not some deal, it's about… algorithms, shit! It's about efficient search, like a really, really fast Google, but for anything, what the fuck.
+
+That's... a very bigly database then, huh?  Bigly. Tremendous.  The best database, believe me.  Better than anything Obama ever did, what a disaster!
+
+Yeah, well, it's used for AI, too.  Generative AI, even.  It helps keep chatbots from hallucinating bullshit.  Hell yeah, that's epic.

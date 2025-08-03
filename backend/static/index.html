@@ -271,6 +271,7 @@
         <div class="tabs">
             <button class="tab active" onclick="switchTab('url')">Article URL</button>
             <button class="tab" onclick="switchTab('text')">Paste Text</button>
+            <button class="tab" onclick="switchTab('topic')">Topic Search</button>
         </div>
 
         <div id="url-tab" class="tab-content active">
@@ -315,6 +316,27 @@
             <button class="button" onclick="generateFromText()">Generate Video from Text</button>
         </div>
 
+        <div id="topic-tab" class="tab-content">
+            <div class="input-group">
+                <label for="topicInput">🔍 Enter a Topic:</label>
+                <input type="text" id="topicInput" placeholder="e.g., How does blockchain work? What is quantum computing? How do solar panels work?" />
+            </div>
+            
+            <!-- Speaker Pair Selection -->
+            <div class="speaker-selection">
+                <label for="speakerPairTopic">🎭 Choose Speaker Pair:</label>
+                <select id="speakerPairTopic" onchange="updateSpeakerDescription('speakerPairTopic', 'speakerDescriptionTopic')">
+                    <option value="trump_elon">Trump & Elon</option>
+                    <option value="baburao_samay">Baburao & Samay</option>
+                </select>
+                <div class="speaker-description" id="speakerDescriptionTopic">
+                    Political discussions with tech innovation
+                </div>
+            </div>
+            
+            <button class="button" onclick="generateFromTopic()">🔍 Search & Generate Video</button>
+        </div>
+
         <div class="loading" id="loading">
             <div class="spinner"></div>
             <p>Generating your hilarious video... This may take a minute!</p>
@@ -340,6 +362,7 @@
             <h3>✨ Features:</h3>
             <ul>
                 <li>Extract content from any article URL</li>
+                <li>🔍 Search topics and generate content automatically</li>
                 <li>🎭 Choose from multiple speaker pairs:</li>
                 <li style="margin-left: 20px;">• Trump & Elon (Political + Tech)</li>
                 <li style="margin-left: 20px;">• Baburao & Samay (Comedy + Chess)</li>
@@ -429,6 +452,11 @@
                 showError('Please enter a valid article URL');
                 return;
             }
+            
+            if (!speakerPair) {
+                showError('Please select a speaker pair');
+                return;
+            }
 
             showLoading();
 
@@ -464,6 +492,11 @@
                 showError('Please enter article text');
                 return;
             }
+            
+            if (!speakerPair) {
+                showError('Please select a speaker pair');
+                return;
+            }
 
             showLoading();
 
@@ -475,6 +508,46 @@
                     },
                     body: JSON.stringify({
                         text: text,
+                        speaker_pair: speakerPair
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to generate video');
+                }
+
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                showError('Error: ' + error.message);
+            }
+        }
+
+        async function generateFromTopic() {
+            const topic = document.getElementById('topicInput').value.trim();
+            const speakerPair = document.getElementById('speakerPairTopic').value;
+            
+            if (!topic) {
+                showError('Please enter a topic to search');
+                return;
+            }
+            
+            if (!speakerPair) {
+                showError('Please select a speaker pair');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('/generate-topic-reel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: topic,
                         speaker_pair: speakerPair
                     })
                 });
