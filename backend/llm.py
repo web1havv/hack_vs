@@ -124,16 +124,24 @@ def generate_script(article_text: str) -> str:
         raise Exception(f"Failed to generate script: {str(e)}") 
 
 CONVERSATIONAL_SCRIPT_PROMPT = """
-Write a 30-second comedy skit featuring Elon Musk as a patient teacher and Donald Trump as a loud and curious student discussing this article.
+Write a 30-second hilarious comedy skit featuring Elon Musk and Donald Trump having an authentic heated discussion about this article.
+
+CHARACTER PERSONALITIES:
+- Trump: Confident, bombastic, uses phrases like "tremendous," "bigly," "believe me," "what the hell," "damn," "holy shit," often talks about deals, winning, and how things are "the best" or "the worst." Gets easily sidetracked into tangents about his achievements. Calls things "fucking incredible" when excited.
+- Elon: Tech-focused, sometimes awkward, talks about Mars, Tesla, AI, makes references to memes, crypto, and "epic" things. Uses mild cuss words like "damn," "shit," "hell yeah," and "what the fuck" when explaining complex stuff. Often responds with technical explanations but in simple terms.
 
 Follow this structure:
-1. Musk opens the scene by asking a tech-related question to the class about the article topic.
-2. Trump eagerly asks short follow-up questions—but his ideas are exaggerated and overly simplified. 
-3. Musk patiently explains the concept in detail using a simple real-life analogy.
+1. Trump opens with bombastic confusion about the article topic with mild cuss words
+2. Elon tries to explain with tech analogies but gets frustrated and uses cuss words
+3. Trump misunderstands completely and relates it to his achievements with profanity
+4. Elon gets more animated and uses stronger language to explain
+5. End with both getting heated but still trying to make their points
 
 Tone:
-- Fast-paced, sharp, and character-driven.
-- If adding them makes the conversation better, Trump and Musk should use their famous catchphrases.
+- Authentic, heated but funny conversation with mild profanity
+- Fast-paced, sharp, and character-driven
+- Include their real speaking patterns and famous catchphrases
+- Make them sound like they're having a real argument but keeping it entertaining
 
 CRITICAL REQUIREMENTS:
 - Dialogue only. No narration.
@@ -220,8 +228,8 @@ BABURAO_SAMAY_SCRIPT_PROMPT = """
 Write a 30-second hilarious comedy skit featuring Baburao Ganpatrao Apte (from Hera Pheri) and Samay Raina (chess master and comedian) discussing this article. The dialogue should be in HINDI but written in ROMAN script (Hinglish).
 
 CHARACTER PERSONALITIES:
-- Baburao: Classic Hera Pheri style. Always confused, speaks mix of Hindi-English. Uses phrases like "Ye kya bakchodi hai?", "Arre yaar", "Kya baat kar rahe ho", "Samajh nahi aa raha", "Pareshaan kar diya", "Dimag kharab ho gaya". Gets everything completely wrong, makes absurd connections to daily life.
-- Samay: Chess master comedian who speaks in Hindi-English mix. Uses words like "Yaar", "Bhai", "Dekho", "Samjha", "Logic hai na", "Strategy chahiye". Patient but sarcastic, explains with chess analogies.
+- Baburao: Classic Hera Pheri style. Always confused, speaks mix of Hindi-English. Uses phrases like "Ye kya bakchodi hai saala?", "Arre kameena", "Kya baat kar rahe ho saala", "Samajh nahi aa raha cutiyapa", "Kameene pareshaan kar diya", "Saala dimag kharab ho gaya". Gets everything completely wrong, makes absurd connections to daily life.
+- Samay: Chess master comedian who speaks in Hindi-English mix. Uses words like "Yaar", "Bhai", "Dekho saala", "Samjha kameena", "Logic hai na saala", "Strategy chahiye cutiyapa". Patient but sarcastic, explains with chess analogies, uses modern slang and mild abuse.
 
 DIALOGUE STYLE REQUIREMENTS:
 - Write dialogue in ROMAN HINDI (Hinglish) - NOT pure English
@@ -232,12 +240,12 @@ DIALOGUE STYLE REQUIREMENTS:
 - Keep it authentic to how these characters actually speak
 
 CONVERSATION STRUCTURE:
-1. Baburao starts confused: "Ye kya bakchodi hai? Samajh nahi aa raha"
-2. Samay explains in Hindi-English: "Dekho bhai, ye simple hai"  
-3. Baburao misunderstands completely with Hindi phrases
-4. Samay uses chess analogy in Hindi-English
-5. Baburao relates to daily problems in typical Hindi style
-6. End with Baburao's classic confusion
+1. Baburao starts confused: "Ye kya bakchodi hai? Samajh nahi aa raha saala"
+2. Samay explains in Hindi-English: "Arre saala, dekho simple hai"  
+3. Baburao misunderstands completely with Hindi abuse: 
+4. Samay uses chess analogy with mild cuss: "Bhai ye cutiyapa nahi hai, logic hai"
+5. Baburao relates to daily problems: "Saala dimag kharab kar diya"
+6. End with Baburao's classic confused abuse: "Kameene, samjha nahi aaya"
 
 HINDI WORDS TO INCLUDE:
 - Bakchodi, samajh, dimag, pareshaan, yaar, bhai, dekho, kya, hai, nahi, aaya, kharab, logic, strategy, simple, problem
@@ -251,13 +259,16 @@ CRITICAL REQUIREMENTS:
 - NO speaker names in the dialogue text itself
 - Make it EXTREMELY FUNNY with authentic Indian humor
 - Include real Hindi expressions and reactions
+- Add mild Hindi cuss words like "saala," "kameena," "cutiyapa" where appropriate
+- Make Baburao use classic abuse like "kameene," "saala," "saala kutta"
+- Samay can use modern slang like "bhai ye kya cutiyapa hai," "saala samjha nahi"
 
 EXAMPLE FORMAT:
-Ye kya bakchodi hai? Samajh nahi aa raha yaar.
+Arre ye kya bakchodi hai saala? Samajh nahi aa raha yarr.
 
-Dekho bhai, simple hai na. Logic lagao.
+Dekho bhai, simple hai na. Logic lagao na chomu.
 
-Dimag kharab kar diya. Pareshaan kar diya.
+Saala dimag kharab kar diya. Kameene pareshaan kar diya.
 
 Article: {article_text}
 
@@ -290,4 +301,83 @@ def generate_conversational_script(article_text: str, speaker_pair: str = "trump
         return result
     except Exception as e:
         logger.error(f"❌ Failed to generate conversational script: {str(e)}")
-        raise Exception(f"Failed to generate conversational script: {str(e)}") 
+        raise Exception(f"Failed to generate conversational script: {str(e)}")
+
+TOPIC_SEARCH_PROMPT = """
+You are a helpful assistant that finds or creates informative content about topics. Given a user's topic, you should:
+
+1. FIRST try to find a real, recent article about this topic from reliable sources
+2. If no recent article exists, create a comprehensive explanation about how the topic works
+
+For topic: {topic}
+
+Please provide:
+1. A brief summary of what you found or created
+2. The full content (either from the article or your generated explanation)
+3. The source URL (if it's a real article) or "AI Generated" (if you created it)
+
+Format your response as:
+SUMMARY: [brief summary]
+CONTENT: [full content]
+SOURCE: [URL or "AI Generated"]
+
+Focus on explaining HOW things work, their mechanisms, processes, and real-world applications.
+"""
+
+def search_or_generate_topic_content(topic: str) -> dict:
+    """
+    Search for real articles about a topic or generate comprehensive content about how it works.
+    Returns a dictionary with summary, content, and source information.
+    """
+    try:
+        logger.info(f"🔍 Searching/generating content for topic: {topic}")
+        
+        prompt = TOPIC_SEARCH_PROMPT.format(topic=topic)
+        
+        logger.info("🤖 Sending request to Gemini API for topic content...")
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+        
+        result = response.text.strip() if hasattr(response, 'text') else str(response)
+        logger.info(f"✅ Topic content generated successfully, length: {len(result)} characters")
+        
+        # Parse the response to extract summary, content, and source
+        lines = result.split('\n')
+        summary = ""
+        content = ""
+        source = "AI Generated"
+        
+        current_section = None
+        for line in lines:
+            line = line.strip()
+            if line.startswith("SUMMARY:"):
+                current_section = "summary"
+                summary = line.replace("SUMMARY:", "").strip()
+            elif line.startswith("CONTENT:"):
+                current_section = "content"
+                content = line.replace("CONTENT:", "").strip()
+            elif line.startswith("SOURCE:"):
+                current_section = "source"
+                source = line.replace("SOURCE:", "").strip()
+            elif current_section == "content" and line:
+                content += "\n" + line
+            elif current_section == "summary" and line:
+                summary += " " + line
+        
+        # If parsing failed, use the entire response as content
+        if not content:
+            content = result
+            summary = f"Information about {topic}"
+        
+        logger.info(f"📄 Parsed content - Summary: {len(summary)} chars, Content: {len(content)} chars, Source: {source}")
+        
+        return {
+            "summary": summary,
+            "content": content,
+            "source": source,
+            "topic": topic
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to search/generate topic content: {str(e)}")
+        raise Exception(f"Failed to search/generate topic content: {str(e)}")

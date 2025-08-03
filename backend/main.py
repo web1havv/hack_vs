@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 from opencv_video_generator import test_video_overlay
-from llm import generate_script, generate_conversational_script, test_api_key
+from llm import generate_script, generate_conversational_script, test_api_key, search_or_generate_topic_content
 from conversational_tts import generate_conversational_voiceover, SPEAKER_PAIRS
 from opencv_video_generator import create_background_video_with_speaker_overlays
 from article_extractor import extract_article_from_url
@@ -41,12 +41,22 @@ class ArticleInput(BaseModel):
     url: str = None
     text: str = None
     title: str = None
-    speaker_pair: str = "trump_elon"  # Default to Trump & Elon
+    speaker_pair: str  # Required field - no default
+
+class TopicInput(BaseModel):
+    topic: str
+    speaker_pair: str  # Required field - no default
 
 class ReelResponse(BaseModel):
     script: str
     audio_url: str
     video_url: str = None
+
+class TopicContentResponse(BaseModel):
+    summary: str
+    content: str
+    source: str
+    topic: str
 
 @app.on_event("startup")
 async def startup_event():
@@ -199,7 +209,7 @@ async def generate_conversational_reel(article: ArticleInput):
         logger.debug(f"📜 [{request_id}] Script preview: {script[:200]}...")
         
         # Step 3: Generate conversational audio with speaker pair
-        speaker_pair = getattr(article, 'speaker_pair', 'trump_elon')  # Default to Trump & Elon
+        speaker_pair = article.speaker_pair
         logger.info(f"🎵 [{request_id}] Step 3: Generating conversational audio with speaker pair: {speaker_pair}")
         audio_path = await loop.run_in_executor(None, generate_conversational_voiceover, script, None, speaker_pair)
         logger.info(f"🎵 [{request_id}] Conversational audio generated: {audio_path}")
@@ -320,7 +330,7 @@ async def generate_article_reel(article: ArticleInput):
         logger.debug(f"📜 [{request_id}] Script preview: {script[:200]}...")
         
         # Step 3: Generate conversational audio with speaker pair
-        speaker_pair = getattr(article, 'speaker_pair', 'trump_elon')  # Default to Trump & Elon
+        speaker_pair = article.speaker_pair
         logger.info(f"🎵 [{request_id}] Step 3: Generating conversational audio with speaker pair: {speaker_pair}")
         audio_path = await loop.run_in_executor(None, generate_conversational_voiceover, script, None, speaker_pair)
         logger.info(f"🎵 [{request_id}] Audio generated successfully: {audio_path}")
@@ -540,4 +550,132 @@ async def get_speaker_pairs():
     return {
         "speaker_pairs": SPEAKER_PAIRS,
         "default": "trump_elon"
-    } 
+    }
+
+@app.post("/generate-topic-content", response_model=TopicContentResponse)
+async def generate_topic_content(topic_input: TopicInput):
+    """
+    Search for real articles about a topic or generate comprehensive content about how it works.
+    """
+    request_id = f"req_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    logger.info(f"🔄 [{request_id}] Starting topic content generation for: {topic_input.topic}")
+    
+    try:
+        # Step 1: Search for or generate content about the topic
+        logger.info(f"🔍 [{request_id}] Step 1: Searching/generating content for topic")
+        loop = asyncio.get_event_loop()
+        topic_data = await loop.run_in_executor(None, search_or_generate_topic_content, topic_input.topic)
+        
+        logger.info(f"✅ [{request_id}] Topic content generated successfully")
+        logger.info(f"📄 [{request_id}] Summary: {topic_data['summary'][:100]}...")
+        logger.info(f"📄 [{request_id}] Content length: {len(topic_data['content'])} characters")
+        logger.info(f"🔗 [{request_id}] Source: {topic_data['source']}")
+        
+        return TopicContentResponse(
+            summary=topic_data['summary'],
+            content=topic_data['content'],
+            source=topic_data['source'],
+            topic=topic_data['topic']
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ [{request_id}] Failed to generate topic content: {str(e)}")
+        logger.error(f"❌ [{request_id}] Error type: {type(e).__name__}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate topic content: {str(e)}")
+
+@app.post("/generate-topic-reel", response_model=ReelResponse)
+async def generate_topic_reel(topic_input: TopicInput):
+    """
+    Generate a conversational reel from topic-based content.
+    """
+    request_id = f"req_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    logger.info(f"🔄 [{request_id}] Starting topic reel generation for: {topic_input.topic}")
+    
+    try:
+        # Step 1: Search for or generate content about the topic
+        logger.info(f"🔍 [{request_id}] Step 1: Searching/generating content for topic")
+        loop = asyncio.get_event_loop()
+        topic_data = await loop.run_in_executor(None, search_or_generate_topic_content, topic_input.topic)
+        
+        content = topic_data['content']
+        summary = topic_data['summary']
+        source = topic_data['source']
+        
+        logger.info(f"📄 [{request_id}] Content generated, length: {len(content)} characters")
+        logger.info(f"📄 [{request_id}] Source: {source}")
+        
+        # Step 2: Generate conversational script with speaker pair
+        speaker_pair = topic_input.speaker_pair
+        logger.info(f"🤖 [{request_id}] Step 2: Generating conversational script for {speaker_pair}")
+        script = await loop.run_in_executor(None, generate_conversational_script, content, speaker_pair)
+        logger.info(f"📜 [{request_id}] Conversational script generated successfully")
+        logger.info(f"📜 [{request_id}] Script length: {len(script)} characters")
+        
+        # Step 3: Generate conversational audio with speaker pair
+        logger.info(f"🎵 [{request_id}] Step 3: Generating conversational audio with speaker pair: {speaker_pair}")
+        audio_path = await loop.run_in_executor(None, generate_conversational_voiceover, script, None, speaker_pair)
+        logger.info(f"🎵 [{request_id}] Audio generated successfully: {audio_path}")
+        
+        # Step 4: Create conversational video with background and speaker overlays
+        logger.info(f"🎬 [{request_id}] Step 4: Creating conversational video with background and speaker overlays")
+        video_path = await loop.run_in_executor(None, create_background_video_with_speaker_overlays, script, audio_path, None, None, speaker_pair)
+        logger.info(f"🎬 [{request_id}] Video with background created successfully: {video_path}")
+        
+        # Step 5: Save files to outputs directory
+        logger.info(f"💾 [{request_id}] Step 5: Saving files to outputs directory")
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        # Ensure outputs directory exists
+        os.makedirs("outputs", exist_ok=True)
+        
+        # Save script with topic information
+        script_filename = f"topic_script_{timestamp}.txt"
+        script_path = os.path.join("outputs", script_filename)
+        with open(script_path, 'w', encoding='utf-8') as f:
+            f.write(f"Topic: {topic_input.topic}\nSummary: {summary}\nSource: {source}\n\n{script}")
+        logger.info(f"📝 [{request_id}] Script saved: {script_path}")
+        
+        # Save timeline
+        from conversational_tts import create_speaker_timeline
+        timeline = create_speaker_timeline(script)
+        timeline_filename = f"topic_timeline_{timestamp}.json"
+        timeline_path = os.path.join("outputs", timeline_filename)
+        import json
+        
+        with open(timeline_path, 'w', encoding='utf-8') as f:
+            json.dump(timeline, f, indent=2)
+        logger.info(f"⏰ [{request_id}] Timeline saved: {timeline_path}")
+        
+        # Copy audio to outputs
+        audio_filename = f"topic_audio_{timestamp}.wav"
+        audio_output_path = os.path.join("outputs", audio_filename)
+        import shutil
+        shutil.copy2(audio_path, audio_output_path)
+        logger.info(f"🎵 [{request_id}] Audio saved: {audio_output_path}")
+        
+        # Copy video to outputs
+        video_filename = f"topic_video_{timestamp}.mp4"
+        video_output_path = os.path.join("outputs", video_filename)
+        shutil.copy2(video_path, video_output_path)
+        logger.info(f"🎬 [{request_id}] Video saved: {video_output_path}")
+        
+        # Clean up temporary files
+        try:
+            os.remove(audio_path)
+            os.remove(video_path)
+            logger.debug(f"🗑️ [{request_id}] Cleaned up temporary files")
+        except Exception as e:
+            logger.warning(f"⚠️ [{request_id}] Failed to clean up temporary files: {str(e)}")
+        
+        logger.info(f"✅ [{request_id}] Topic reel generation completed successfully!")
+        
+        return ReelResponse(
+            script=script,
+            audio_url=f"/download/{audio_filename}",
+            video_url=f"/download/{video_filename}"
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ [{request_id}] Failed to generate topic reel: {str(e)}")
+        logger.error(f"❌ [{request_id}] Error type: {type(e).__name__}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate topic reel: {str(e)}") 

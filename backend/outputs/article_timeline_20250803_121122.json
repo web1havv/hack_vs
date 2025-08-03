@@ -1,0 +1,38 @@
+[
+  {
+    "speaker": "trump",
+    "start_time": 0.0,
+    "end_time": 8.0,
+    "text": "What the hell is a vector database?  It sounds like some damn commie plot, believe me."
+  },
+  {
+    "speaker": "elon",
+    "start_time": 8.2,
+    "end_time": 26.7,
+    "text": "It's like\u2026 imagine your brain, right?  It stores memories as\u2026  vectors.  Think of them as arrows pointing in different directions.  Similar memories are close together.  This database does that with data, damn it.  It's fucking incredible, actually."
+  },
+  {
+    "speaker": "trump",
+    "start_time": 26.9,
+    "end_time": 36.4,
+    "text": "So, it's like my tremendous rallies?  All the people, the energy\u2026 vectors of\u2026 winning!  The best rallies, believe me."
+  },
+  {
+    "speaker": "elon",
+    "start_time": 36.599999999999994,
+    "end_time": 57.099999999999994,
+    "text": "No, it's not about rallies, it's about finding similar things, like finding similar images on your phone.  It's not some deal, it's about\u2026 algorithms, shit! It's about efficient search, like a really, really fast Google, but for anything, what the fuck."
+  },
+  {
+    "speaker": "trump",
+    "start_time": 57.3,
+    "end_time": 68.8,
+    "text": "That's... a very bigly database then, huh?  Bigly. Tremendous.  The best database, believe me.  Better than anything Obama ever did, what a disaster!"
+  },
+  {
+    "speaker": "elon",
+    "start_time": 69.0,
+    "end_time": 79.5,
+    "text": "Yeah, well, it's used for AI, too.  Generative AI, even.  It helps keep chatbots from hallucinating bullshit.  Hell yeah, that's epic."
+  }
+]

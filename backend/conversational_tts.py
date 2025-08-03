@@ -18,7 +18,7 @@ SPEAKER_CONFIG = {
         "fallback_api_key_env": "ELEVENLABS_API_KEY"  # Fallback to main key
     },
     "elon": {
-        "voice_id": "5p344brGATMrJ2N3FKFT",   # Elon Musk voice from ElevenLabs
+        "voice_id": "uTsZKELdeD1KQZz4M45o",   # Elon Musk voice from ElevenLabs (updated)
         "api_key_env": "ELEVENLABS_API_KEY_ELON",   # Separate API key for Elon
         "fallback_api_key_env": "ELEVENLABS_API_KEY"  # Fallback to main key
     },

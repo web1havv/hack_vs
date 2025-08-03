@@ -1,0 +1,38 @@
+[
+  {
+    "speaker": "trump",
+    "start_time": 0.0,
+    "end_time": 10.0,
+    "text": "What the hell is this quantum computing bullshit?  It's the worst thing I've ever heard, believe me.  A total disaster."
+  },
+  {
+    "speaker": "elon",
+    "start_time": 10.2,
+    "end_time": 25.2,
+    "text": "It's like\u2026 imagine a coin, but it\u2019s spinning and it\u2019s both heads and tails at the same time.  That\u2019s superposition, damn it!  It's fucking incredible, but it's complicated as hell."
+  },
+  {
+    "speaker": "trump",
+    "start_time": 25.4,
+    "end_time": 36.4,
+    "text": "So, it\u2019s like one of my casinos, but instead of counting money, it's counting possibilities, bigly.  Tremendous!  The best.  What a deal."
+  },
+  {
+    "speaker": "elon",
+    "start_time": 36.599999999999994,
+    "end_time": 57.099999999999994,
+    "text": "No, it\u2019s not a casino! It's using quantum entanglement to solve problems faster than any computer, you moron! It's like\u2026 imagine multiple coins, linked, and when one lands, the others instantly do too, regardless of distance!  It\u2019s mind-blowing, what the fuck."
+  },
+  {
+    "speaker": "trump",
+    "start_time": 57.3,
+    "end_time": 68.3,
+    "text": "That's like the best deal ever, believe me.  My rallies are so big, they are entangled\u2026 like\u2026 tremendous, you know.  The best!"
+  },
+  {
+    "speaker": "elon",
+    "start_time": 68.5,
+    "end_time": 80.5,
+    "text": "It's not about rallies, you goddamn idiot! It\u2019s about solving problems \u2013  drug discovery, materials science, breaking encryption! It's the future, shit!  Hell yeah!"
+  }
+]
