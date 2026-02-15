@@ -3,6 +3,9 @@
 .env.local
 .env.production
 
+# Output files
+outputs/
+
 # Python
 __pycache__/
 *.py[cod]
