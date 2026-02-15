@@ -186,7 +186,7 @@ class OpenCVVideoGenerator:
     
 
 
-    def create_video_with_overlays_and_captions(self, script_text, audio_path, background_video_path=None, output_path=None, speaker_pair="trump_elon", enable_captions=True, timing_data=None):
+    def create_video_with_overlays_and_captions(self, script_text, audio_path, background_video_path=None, output_path=None, speaker_pair="trump_elon", enable_captions=True, timing_data=None, brand_logo_path=None):
 
         """
         Create video with background video and speaker overlays
@@ -227,6 +227,27 @@ class OpenCVVideoGenerator:
             samay_img = self.load_and_resize_image("assets/samay.png")
             baburao_img = self.load_and_resize_image("assets/baburao.png")
 
+            # Load brand logo for brand plug (appears during last 50% of video)
+            brand_logo_img = None
+            if brand_logo_path and os.path.exists(brand_logo_path):
+                try:
+                    # Resize logo to ~25% of video width, suitable for top-center overlay
+                    pil_logo = Image.open(brand_logo_path)
+                    if pil_logo.mode in ('LA', 'RGBA'):
+                        pil_logo = pil_logo.convert('RGBA')
+                    else:
+                        pil_logo = pil_logo.convert('RGB')
+                    max_logo_width = int(self.video_width * 0.25)
+                    orig_w, orig_h = pil_logo.size
+                    aspect = orig_h / orig_w
+                    new_w = min(orig_w, max_logo_width)
+                    new_h = int(new_w * aspect)
+                    pil_logo = pil_logo.resize((new_w, new_h), Image.Resampling.LANCZOS)
+                    logo_array = np.array(pil_logo)
+                    brand_logo_img = cv2.cvtColor(logo_array, cv2.COLOR_RGBA2BGRA) if len(logo_array.shape) == 3 and logo_array.shape[2] == 4 else cv2.cvtColor(logo_array, cv2.COLOR_RGB2BGR)
+                    logger.info(f"✅ [{request_id}] Brand logo loaded: {brand_logo_path}")
+                except Exception as e:
+                    logger.warning(f"⚠️ [{request_id}] Could not load brand logo: {e}")
 
             logger.info(f"✅ [{request_id}] Speaker images loaded and processed")
             
@@ -335,7 +356,13 @@ class OpenCVVideoGenerator:
                         caption_text = current_caption['text']
                         caption_speaker = current_caption['speaker']
                         bg_frame = render_caption_on_frame(bg_frame, caption_text, caption_speaker)
-            
+
+                # 🆕 ADD BRAND LOGO OVERLAY during last 50% of video (brand plug moment)
+                if brand_logo_img is not None and current_time >= audio_duration * 0.5:
+                    logo_h, logo_w = brand_logo_img.shape[:2]
+                    logo_x = (self.video_width - logo_w) // 2  # Center horizontally
+                    logo_y = 80  # Top of frame with margin
+                    self._overlay_image(bg_frame, brand_logo_img, logo_x, logo_y)
 
                 # Write frame
                 video_writer.write(bg_frame)
@@ -503,13 +530,12 @@ class OpenCVVideoGenerator:
 # Global instance
 video_generator = OpenCVVideoGenerator()
 
-def create_background_video_with_speaker_overlays(script_text, audio_path, background_video_path=None, output_path=None, speaker_pair="trump_elon", timing_data=None):
+def create_background_video_with_speaker_overlays(script_text, audio_path, background_video_path=None, output_path=None, speaker_pair="trump_elon", timing_data=None, brand_logo_path=None):
     """
-    Main function to replace MoviePy video generation
+    Main function to replace MoviePy video generation.
+    If brand_logo_path is provided, the logo appears during the last 50% of the video (brand plug moment).
     """
     logger.info("🎬 Using OpenCV-based video generation (MoviePy replacement)")
-
-
     logger.info(f"🎭 WRAPPER FUNCTION - Received speaker_pair: {speaker_pair}")
     return video_generator.create_video_with_overlays_and_captions(
         script_text=script_text,
@@ -518,7 +544,8 @@ def create_background_video_with_speaker_overlays(script_text, audio_path, backg
         output_path=output_path,
         speaker_pair=speaker_pair,
         enable_captions=True,
-        timing_data=timing_data
+        timing_data=timing_data,
+        brand_logo_path=brand_logo_path
     )
 
 # Add this simple test function to opencv_video_generator.py

@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meimetic — AI Content Companion for Brands</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #050505;
+            --white: #fafafa;
+            --gray-100: #e5e5e5;
+            --gray-200: #a3a3a3;
+            --gray-300: #737373;
+            --gray-400: #404040;
+            --gray-500: #262626;
+            --accent: #a78bfa;
+            --accent-dim: #7c3aed;
+            --accent-glow: rgba(167, 139, 250, 0.15);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--black);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Noise overlay */
+        .noise {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Scroll animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+
+        /* ─── NAV ─── */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1.25rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.4s;
+        }
+
+        nav.scrolled {
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(20px) saturate(1.8);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .logo-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .logo-mark { width: 34px; height: 34px; }
+
+        .logo-word {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: -0.03em;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            font-size: 0.9rem;
+            color: var(--gray-200);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .nav-link:hover { color: var(--white); }
+
+        .cta-nav {
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.6rem 1.4rem;
+            background: var(--white);
+            color: var(--black);
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.25s;
+        }
+        .cta-nav:hover {
+            background: var(--accent);
+            color: var(--black);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px -8px rgba(167, 139, 250, 0.4);
+        }
+
+        /* ─── HERO ─── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8rem 2rem 6rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(167,139,250,0.08) 0%, rgba(124,58,237,0.03) 40%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(167, 139, 250, 0.08);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 2.5rem;
+            animation: fadeIn 1s ease;
+        }
+
+        .hero-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(3.25rem, 9vw, 6rem);
+            font-weight: 800;
+            letter-spacing: -0.045em;
+            line-height: 0.95;
+            margin-bottom: 2rem;
+            max-width: 14ch;
+            animation: fadeUp 0.8s ease;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--white) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .tagline {
+            font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+            color: var(--gray-200);
+            max-width: 38rem;
+            line-height: 1.75;
+            margin-bottom: 3rem;
+            font-weight: 400;
+            animation: fadeUp 0.8s 0.15s ease both;
+        }
+
+        .hero-cta-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            animation: fadeUp 0.8s 0.3s ease both;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            padding: 1rem 2rem;
+            background: var(--white);
+            color: var(--black);
+            border: none;
+            border-radius: 10px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: -0.01em;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -12px rgba(167, 139, 250, 0.35);
+        }
+        .btn-primary svg { width: 18px; height: 18px; }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 1rem 1.5rem;
+            color: var(--gray-200);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .btn-ghost:hover { color: var(--white); }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 2.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            animation: fadeIn 1s 1s ease both;
+        }
+
+        .scroll-hint span {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--gray-400), transparent);
+            animation: scroll-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scroll-pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ─── DIVIDER ─── */
+        .section-divider {
+            max-width: 72rem;
+            margin: 0 auto;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--gray-500), transparent);
+        }
+
+        /* ─── PROBLEM ─── */
+        .problem {
+            padding: 8rem 2rem;
+            max-width: 56rem;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .problem h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 2rem;
+            line-height: 1.2;
+        }
+
+        .problem p {
+            font-size: 1.1rem;
+            line-height: 1.85;
+            color: var(--gray-200);
+        }
+
+        .problem p + p {
+            margin-top: 1.25rem;
+        }
+
+        /* ─── SOLUTION ─── */
+        .solution {
+            padding: 8rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .solution::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(167,139,250,0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .solution-inner {
+            max-width: 48rem;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .solution h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+        }
+
+        .solution > .solution-inner > p {
+            font-size: 1.15rem;
+            color: var(--gray-200);
+            line-height: 1.8;
+            margin-bottom: 3rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            text-align: left;
+        }
+
+        .feature {
+            padding: 1.75rem;
+            border-radius: 14px;
+            border: 1px solid var(--gray-500);
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s;
+        }
+        .feature:hover {
+            border-color: rgba(167, 139, 250, 0.3);
+            background: rgba(167, 139, 250, 0.04);
+            transform: translateY(-2px);
+        }
+
+        .feature span {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: -0.01em;
+            color: var(--white);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature p {
+            font-size: 0.92rem;
+            color: var(--gray-200);
+            line-height: 1.65;
+        }
+
+        /* ─── HOW IT WORKS ─── */
+        .how-it-works {
+            padding: 8rem 2rem;
+            max-width: 72rem;
+            margin: 0 auto;
+        }
+
+        .how-it-works .section-label,
+        .how-it-works h2 {
+            text-align: center;
+        }
+
+        .how-it-works h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+        }
+
+        .how-it-works .section-sub {
+            text-align: center;
+            color: var(--gray-200);
+            font-size: 1.1rem;
+            max-width: 36rem;
+            margin: 0 auto 4rem;
+            line-height: 1.7;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .step {
+            padding: 2.25rem;
+            border: 1px solid var(--gray-500);
+            border-radius: 16px;
+            background: linear-gradient(160deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.9) 100%);
+            transition: all 0.35s;
+            position: relative;
+            overflow: hidden;
+        }
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-dim), transparent);
+            opacity: 0;
+            transition: opacity 0.35s;
+        }
+        .step:hover {
+            border-color: rgba(167, 139, 250, 0.25);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px -20px rgba(167, 139, 250, 0.15);
+        }
+        .step:hover::before { opacity: 1; }
+
+        .step-number {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--gray-500), var(--gray-400));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.25rem;
+            line-height: 1;
+        }
+
+        .step h3 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 1.15rem;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.01em;
+        }
+
+        .step p {
+            color: var(--gray-200);
+            line-height: 1.7;
+            font-size: 0.92rem;
+        }
+
+        /* ─── DEEP FEATURES ─── */
+        .deep-features {
+            padding: 8rem 2rem;
+            max-width: 72rem;
+            margin: 0 auto;
+        }
+
+        .deep-features .section-label,
+        .deep-features h2 {
+            text-align: center;
+        }
+
+        .deep-features h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 4rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            padding: 2.5rem;
+            border: 1px solid var(--gray-500);
+            border-radius: 16px;
+            background: linear-gradient(160deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.9) 100%);
+            transition: all 0.35s;
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card:hover {
+            border-color: rgba(167, 139, 250, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 20px 50px -20px rgba(167, 139, 250, 0.12);
+        }
+
+        .feature-card .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(124,58,237,0.08));
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .feature-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.01em;
+        }
+
+        .feature-card p {
+            color: var(--gray-200);
+            line-height: 1.75;
+            font-size: 0.95rem;
+        }
+
+        /* ─── WHO SECTION ─── */
+        .who-section {
+            padding: 8rem 2rem;
+            max-width: 60rem;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .who-section h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+        }
+
+        .who-section .section-sub {
+            color: var(--gray-200);
+            font-size: 1.1rem;
+            max-width: 36rem;
+            margin: 0 auto 3.5rem;
+            line-height: 1.7;
+        }
+
+        .audience-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            text-align: left;
+        }
+
+        .audience-item {
+            padding: 2rem;
+            border: 1px solid var(--gray-500);
+            border-radius: 16px;
+            background: linear-gradient(160deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.9) 100%);
+            transition: all 0.35s;
+        }
+        .audience-item:hover {
+            border-color: rgba(167, 139, 250, 0.25);
+            transform: translateY(-3px);
+        }
+
+        .audience-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(167, 139, 250, 0.08);
+            border: 1px solid rgba(167, 139, 250, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            font-size: 1.2rem;
+        }
+
+        .audience-item h4 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-bottom: 0.6rem;
+            letter-spacing: -0.01em;
+        }
+
+        .audience-item p {
+            color: var(--gray-300);
+            font-size: 0.9rem;
+            line-height: 1.65;
+        }
+
+        /* ─── STATS ─── */
+        .stats-section {
+            padding: 6rem 2rem;
+            max-width: 60rem;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat {
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--gray-500);
+            background: rgba(15, 15, 15, 0.6);
+        }
+
+        .stat h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 4vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--white), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat p {
+            color: var(--gray-300);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* ─── CTA ─── */
+        .cta-section {
+            padding: 8rem 2rem 10rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 900px;
+            height: 500px;
+            background: radial-gradient(ellipse, rgba(167,139,250,0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta-section h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: 1.25rem;
+            line-height: 1;
+        }
+
+        .cta-section p {
+            font-size: 1.15rem;
+            color: var(--gray-200);
+            margin-bottom: 3rem;
+            max-width: 30rem;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.7;
+        }
+
+        /* ─── FOOTER ─── */
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--gray-500);
+        }
+
+        .footer-inner {
+            max-width: 72rem;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .footer-brand svg {
+            width: 24px;
+            height: 24px;
+            color: var(--gray-400);
+        }
+
+        .footer-brand span {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--gray-400);
+        }
+
+        footer p {
+            font-size: 0.85rem;
+            color: var(--gray-400);
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 768px) {
+            .steps { grid-template-columns: 1fr; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .audience-list { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .features { grid-template-columns: 1fr; }
+            .nav-links { gap: 1rem; }
+            .nav-link { display: none; }
+            .footer-inner { flex-direction: column; gap: 1rem; }
+            .hero-cta-group { flex-direction: column; }
+        }
+
+        @media (max-width: 640px) {
+            nav { padding: 1rem 1.25rem; }
+            .hero { padding: 6rem 1.25rem 4rem; }
+            .problem, .solution, .how-it-works, .deep-features,
+            .who-section, .stats-section, .cta-section { padding-left: 1.25rem; padding-right: 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise" aria-hidden="true"></div>
+
+    <!-- ─── NAV ─── -->
+    <nav id="nav">
+        <a href="/" class="logo-link">
+            <svg class="logo-mark" viewBox="0 0 36 36" fill="none">
+                <path d="M6 30V6l12 12 12-12v24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="18" cy="18" r="3" fill="currentColor"/>
+                <path d="M12 12l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="logo-word">Meimetic</span>
+        </a>
+        <div class="nav-links">
+            <a href="#how" class="nav-link">How it works</a>
+            <a href="#features" class="nav-link">Features</a>
+            <a href="/app" class="cta-nav">Get started</a>
+        </div>
+    </nav>
+
+    <!-- ─── HERO ─── -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span class="dot"></span>
+            AI-powered content for brands
+        </div>
+        <h1>Trends wait<br>for <span class="gradient-text">no one.</span></h1>
+        <p class="tagline">We're building an AI content companion so brands can act fast, align with what's trending, and get better visibility — before the moment passes.</p>
+        <div class="hero-cta-group">
+            <a href="/app" class="btn-primary">
+                Start creating
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+            <a href="#how" class="btn-ghost">See how it works</a>
+        </div>
+        <div class="scroll-hint">
+            <span>Scroll</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── PROBLEM ─── -->
+    <section class="problem">
+        <div class="reveal">
+            <span class="section-label">The problem</span>
+            <h2>Brands are invisible when it matters most</h2>
+            <p>Catching trends before they fade is brutal. There are no benchmarks, no easy way to align trending content with your brand, and the visibility window slips by in hours.</p>
+            <p>You're either too late, or you're posting without a clear link to what's actually resonating. Either way, you're invisible when it matters most.</p>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── SOLUTION ─── -->
+    <section class="solution">
+        <div class="solution-inner">
+            <div class="reveal">
+                <span class="section-label">The solution</span>
+                <h2>We're changing that</h2>
+                <p>Meimetic helps brands act fast by aligning your content with what's trending — from Reddit, Instagram, and beyond. Post consistently. Stay visible. Stop missing the window.</p>
+            </div>
+            <div class="features">
+                <div class="feature reveal reveal-delay-1">
+                    <span>Align</span>
+                    <p>Match your brand voice with what's actually trending right now for better visibility.</p>
+                </div>
+                <div class="feature reveal reveal-delay-2">
+                    <span>Act fast</span>
+                    <p>No more guessing. Know what to post and when.</p>
+                </div>
+                <div class="feature reveal reveal-delay-3">
+                    <span>Stay visible</span>
+                    <p>Consistent, trend-aligned content that keeps you in the feed.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── HOW IT WORKS ─── -->
+    <section class="how-it-works" id="how">
+        <div class="reveal">
+            <span class="section-label">How it works</span>
+            <h2>Three steps. Better visibility.</h2>
+            <p class="section-sub">Turn trending moments into branded content that actually gets engagement.</p>
+        </div>
+        <div class="steps">
+            <div class="step reveal reveal-delay-1">
+                <div class="step-number">01</div>
+                <h3>Tell us about your brand</h3>
+                <p>Enter your brand name, what you stand for, your audience, and your positioning. Upload your logo — that's it. No lengthy onboarding, no content calendars to fill out.</p>
+            </div>
+            <div class="step reveal reveal-delay-2">
+                <div class="step-number">02</div>
+                <h3>We generate your reel</h3>
+                <p>Our AI writes a script that weaves your brand message into the trending format people are actually watching — then renders it into a ready-to-post video with voice, visuals, and your logo.</p>
+            </div>
+            <div class="step reveal reveal-delay-3">
+                <div class="step-number">03</div>
+                <h3>Post and watch it spread</h3>
+                <p>Download your reel and drop it on TikTok, Instagram Reels, or YouTube Shorts. You're riding the trend while it's hot — not three days after everyone's moved on.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── FEATURES ─── -->
+    <section class="deep-features" id="features">
+        <div class="reveal">
+            <span class="section-label">Features</span>
+            <h2>What makes Meimetic different</h2>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card reveal reveal-delay-1">
+                <div class="icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a5 5 0 0 1 5 5c0 2-1 3-2 4l-1 1v2h-4v-2l-1-1c-1-1-2-2-2-4a5 5 0 0 1 5-5z"/>
+                        <line x1="10" y1="17" x2="14" y2="17"/>
+                        <line x1="10" y1="20" x2="14" y2="20"/>
+                    </svg>
+                </div>
+                <h3>AI-powered script generation</h3>
+                <p>Our AI doesn't just slap your brand name on a template. It crafts a narrative that naturally integrates your value proposition into the trending format — giving your brand better visibility while feeling organic, not forced.</p>
+            </div>
+            <div class="feature-card reveal reveal-delay-2">
+                <div class="icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="23 7 16 12 23 17 23 7"/>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                    </svg>
+                </div>
+                <h3>Full video production in seconds</h3>
+                <p>From script to voiceover to final rendered video — all automated. No editing software, no freelancers, no waiting days for a single piece of content. You get a download-ready reel in minutes.</p>
+            </div>
+            <div class="feature-card reveal reveal-delay-1">
+                <div class="icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                        <polyline points="17 6 23 6 23 12"/>
+                    </svg>
+                </div>
+                <h3>Trend-aligned content</h3>
+                <p>We track what's trending across Reddit, TikTok, and Instagram so your content gets better visibility while the wave is still rising. No more showing up late with last week's meme.</p>
+            </div>
+            <div class="feature-card reveal reveal-delay-2">
+                <div class="icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <h3>Brand-safe & on message</h3>
+                <p>Every reel is built around your brand values and positioning. The AI respects your voice and messaging — you get better visibility without compromising what your brand stands for.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── WHO IT'S FOR ─── -->
+    <section class="who-section">
+        <div class="reveal">
+            <span class="section-label">Who it's for</span>
+            <h2>Built for teams that move fast</h2>
+            <p class="section-sub">Whether you're a solo founder or a marketing team, Meimetic helps you stay visible without burning hours on content.</p>
+        </div>
+        <div class="audience-list">
+            <div class="audience-item reveal reveal-delay-1">
+                <div class="audience-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <h4>Startups & indie brands</h4>
+                <p>You don't have a content team. You need to ship product AND stay visible. Meimetic handles the content so you can focus on building.</p>
+            </div>
+            <div class="audience-item reveal reveal-delay-2">
+                <div class="audience-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <h4>Social media managers</h4>
+                <p>You're juggling 5 platforms and 10 clients. Generate trend-aligned reels in minutes instead of hours of brainstorming and editing.</p>
+            </div>
+            <div class="audience-item reveal reveal-delay-3">
+                <div class="audience-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"/>
+                        <circle cx="20" cy="21" r="1"/>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
+                </div>
+                <h4>D2C & e-commerce brands</h4>
+                <p>Your products need eyeballs. Turn your brand story into shareable short-form video that drives discovery and sales.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── STATS ─── -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat reveal reveal-delay-1">
+                <h3>&lt;2 min</h3>
+                <p>Average time to generate a branded reel</p>
+            </div>
+            <div class="stat reveal reveal-delay-2">
+                <h3>Zero editing</h3>
+                <p>Download and post — no software needed</p>
+            </div>
+            <div class="stat reveal reveal-delay-3">
+                <h3>3 platforms</h3>
+                <p>Optimized for TikTok, Reels & Shorts</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── CTA ─── -->
+    <section class="cta-section">
+        <div class="reveal">
+            <h2>Stop missing<br>the moment</h2>
+            <p>Your next reel for better visibility is one click away. Tell us about your brand and let Meimetic do the rest.</p>
+            <a href="/app" class="btn-primary">
+                Try Meimetic free
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- ─── FOOTER ─── -->
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <svg viewBox="0 0 36 36" fill="none">
+                    <path d="M6 30V6l12 12 12-12v24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="18" cy="18" r="3" fill="currentColor"/>
+                </svg>
+                <span>Meimetic</span>
+            </div>
+            <p>AI content companion for brands</p>
+        </div>
+    </footer>
+
+    <script>
+        // Nav scroll effect
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Scroll reveal
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>

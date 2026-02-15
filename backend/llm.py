@@ -22,8 +22,8 @@ def test_api_key():
     try:
         logger.info("🔑 Testing Gemini API key...")
         
-        # Test with a simple prompt using gemini-1.5-flash
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Test with a simple prompt using gemini-2.0-flash-lite
+        model = genai.GenerativeModel('gemini-2.0-flash-lite')
         test_prompt = "Hello, this is a test. Please respond with 'API key is working' if you can see this message."
         
         logger.info("🤖 Sending test request to Gemini API...")
@@ -37,7 +37,7 @@ def test_api_key():
                 "valid": True,
                 "info": "API key is working correctly",
                 "response": response.text,
-                "model": "gemini-1.5-flash"
+                "model": "gemini-2.0-flash-lite"
             }
         else:
             logger.error("❌ API key test failed - no valid response")
@@ -111,7 +111,7 @@ def generate_script(article_text: str) -> str:
         prompt = SCRIPT_PROMPT.format(article_text=article_text)
         
         logger.info("🤖 Sending request to Gemini API...")
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash-lite')
         response = model.generate_content(prompt)
         
         result = response.text.strip() if hasattr(response, 'text') else str(response)
@@ -279,6 +279,64 @@ Article: {article_text}
 Generate ONLY clean, natural HINGLISH alternating dialogue with 4-6 short segments:
 """
 
+BRAND_PLUG_SCRIPT_PROMPT = """
+Write a 30-second hilarious comedy skit featuring the chosen speakers discussing and promoting this BRAND.
+The conversation should revolve entirely around the brand - what it does, why it's amazing, and naturally promote it.
+
+BRAND INFORMATION:
+- Brand Name: {brand_name}
+- Brand Description/Positioning: {brand_description}
+
+CONVERSATION STRUCTURE:
+1. One speaker introduces or asks about the brand/topic
+2. They discuss what the brand does, its benefits, why it's great
+3. Build enthusiasm - the speakers should get excited about the brand
+4. End with a natural "plug" or recommendation - "you've gotta try it", "best in the business", etc.
+5. The LAST 40-50% of the conversation should be the main promotional pitch - this is when the brand logo will appear on screen
+
+TONE:
+- Same comedy style as other scripts - funny, character-driven, engaging
+- Make it feel like an organic conversation that happens to promote the brand
+- Use the speakers' personalities and catchphrases
+- Hilarious but also genuinely informative about the brand
+- The promotion should feel natural, not forced - like friends recommending something they love
+
+CRITICAL REQUIREMENTS:
+- Dialogue only. No narration.
+- Script must fit within 30 seconds of spoken conversation
+- Create ONLY natural dialogue - NO speaker labels like "Elon:" or "Trump:"
+- NO annotations, scene markers, parentheses, or special formatting
+- NO [BRAND_PLUG] or similar markers - just clean dialogue
+- The conversation must CENTER on the brand - explain what it does, its value, why people should care
+- Include specific details from the brand description
+- Make it suitable for social media (TikTok/Instagram Reels)
+- 4-6 total segments (2-3 exchanges)
+- Each speaking turn 5-8 seconds when spoken
+
+Generate ONLY clean, natural conversational dialogue:
+"""
+
+def generate_brand_plug_script(brand_name: str, brand_description: str, speaker_pair: str = "trump_elon") -> str:
+    """Generate a brand-focused promotional script for the chosen speaker pair."""
+    try:
+        logger.info(f"🤖 Generating brand plug script for '{brand_name}' with {speaker_pair}")
+        
+        # Choose base prompt - brand plug uses same structure, different content focus
+        prompt = BRAND_PLUG_SCRIPT_PROMPT.format(
+            brand_name=brand_name,
+            brand_description=brand_description
+        )
+        
+        model = genai.GenerativeModel('gemini-2.0-flash-lite')
+        response = model.generate_content(prompt)
+        
+        result = response.text.strip() if hasattr(response, 'text') else str(response)
+        logger.info(f"✅ Brand plug script generated successfully, length: {len(result)} characters")
+        return result
+    except Exception as e:
+        logger.error(f"❌ Failed to generate brand plug script: {str(e)}")
+        raise Exception(f"Failed to generate brand plug script: {str(e)}")
+
 def generate_conversational_script(article_text: str, speaker_pair: str = "trump_elon") -> str:
     try:
         logger.info(f"🤖 Generating conversational script for {speaker_pair} - article length: {len(article_text)} characters")
@@ -295,7 +353,7 @@ def generate_conversational_script(article_text: str, speaker_pair: str = "trump
             prompt = CONVERSATIONAL_SCRIPT_PROMPT.format(article_text=article_text)
         
         logger.info(f"🤖 Sending request to Gemini API for {speaker_pair} conversational script...")
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash-lite')
         response = model.generate_content(prompt)
         
         result = response.text.strip() if hasattr(response, 'text') else str(response)

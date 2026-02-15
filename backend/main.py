@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,10 +8,11 @@ import os
 import tempfile
 import logging
 import sys
+import shutil
 from datetime import datetime
 
 from opencv_video_generator import test_video_overlay
-from llm import generate_script, generate_conversational_script, test_api_key
+from llm import generate_script, generate_conversational_script, generate_brand_plug_script, test_api_key
 from conversational_tts import generate_conversational_voiceover, SPEAKER_PAIRS
 from opencv_video_generator import create_background_video_with_speaker_overlays
 from article_extractor import extract_article_from_url
@@ -27,7 +29,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Info Reeler API")
+app = FastAPI(title="Meimetic API")
+
+# Mount static files (must be before catch-all routes)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Add CORS middleware
 app.add_middleware(
@@ -47,6 +52,11 @@ class ArticleInput(BaseModel):
 class TopicInput(BaseModel):
     topic: str
     speaker_pair: str = "trump_elon"  # Default to Trump & Elon
+
+class BrandPlugInput(BaseModel):
+    brand_name: str
+    brand_description: str
+    speaker_pair: str = "trump_elon"
 
 class ReelResponse(BaseModel):
     script: str
@@ -397,6 +407,99 @@ async def generate_article_reel(article: ArticleInput):
         logger.error(f"❌ [{request_id}] Error type: {type(e).__name__}")
         raise HTTPException(status_code=500, detail=f"Failed to generate article reel: {str(e)}")
 
+@app.post("/generate-brand-plug-reel", response_model=ReelResponse)
+async def generate_brand_plug_reel(
+    brand_name: str = Form(...),
+    brand_description: str = Form(...),
+    speaker_pair: str = Form("trump_elon"),
+    logo: UploadFile = File(None)
+):
+    """
+    Generate a brand plug video - script revolves around the brand, logo appears during promotional moments.
+    """
+    request_id = f"brand_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    logger.info(f"🔄 [{request_id}] Starting brand plug reel generation")
+    logger.info(f"🏷️ [{request_id}] Brand: {brand_name}, Speaker pair: {speaker_pair}")
+
+    logo_path = None
+    try:
+        # Save uploaded logo to temp file if provided
+        if logo and logo.filename:
+            ext = os.path.splitext(logo.filename)[1] or ".png"
+            logo_path = os.path.join(tempfile.gettempdir(), f"brand_logo_{request_id}{ext}")
+            with open(logo_path, "wb") as f:
+                shutil.copyfileobj(logo.file, f)
+            logger.info(f"📷 [{request_id}] Logo saved: {logo_path}")
+
+        # Step 1: Generate brand-focused script
+        logger.info(f"🤖 [{request_id}] Step 1: Generating brand plug script")
+        loop = asyncio.get_event_loop()
+        script = await loop.run_in_executor(
+            None, generate_brand_plug_script, brand_name, brand_description, speaker_pair
+        )
+        logger.info(f"📜 [{request_id}] Script generated, length: {len(script)} characters")
+
+        # Step 2: Generate audio with speaker pair
+        logger.info(f"🎵 [{request_id}] Step 2: Generating audio for {speaker_pair}")
+        audio_path, timing_data = await loop.run_in_executor(
+            None, generate_conversational_voiceover, script, None, speaker_pair
+        )
+        logger.info(f"🎵 [{request_id}] Audio generated: {audio_path}")
+
+        # Step 3: Create video with speaker overlays and brand logo
+        logger.info(f"🎬 [{request_id}] Step 3: Creating video with brand logo overlay")
+        video_path = await loop.run_in_executor(
+            None,
+            lambda: create_background_video_with_speaker_overlays(
+                script, audio_path, None, None, speaker_pair, timing_data, logo_path
+            )
+        )
+        logger.info(f"🎬 [{request_id}] Video created: {video_path}")
+
+        # Step 4: Save to outputs
+        os.makedirs("outputs", exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        script_filename = f"brand_script_{timestamp}.txt"
+        script_path = os.path.join("outputs", script_filename)
+        with open(script_path, "w", encoding="utf-8") as f:
+            f.write(f"Brand: {brand_name}\n\n{script}")
+        logger.info(f"📝 [{request_id}] Script saved: {script_path}")
+
+        audio_filename = f"brand_audio_{timestamp}.wav"
+        video_filename = f"brand_video_{timestamp}.mp4"
+        audio_output = os.path.join("outputs", audio_filename)
+        video_output = os.path.join("outputs", video_filename)
+        shutil.copy2(audio_path, audio_output)
+        shutil.copy2(video_path, video_output)
+        logger.info(f"🎵 [{request_id}] Audio saved: {audio_output}")
+        logger.info(f"🎬 [{request_id}] Video saved: {video_output}")
+
+        try:
+            if audio_path and os.path.exists(audio_path):
+                os.remove(audio_path)
+            if video_path and os.path.exists(video_path):
+                os.remove(video_path)
+        except Exception:
+            pass
+
+        logger.info(f"✅ [{request_id}] Brand plug reel completed successfully!")
+        return ReelResponse(
+            script=script,
+            audio_url=f"/download/{audio_filename}",
+            video_url=f"/download/{video_filename}"
+        )
+    except Exception as e:
+        logger.error(f"❌ [{request_id}] Brand plug generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if logo_path and os.path.exists(logo_path):
+            try:
+                os.remove(logo_path)
+                logger.debug(f"🗑️ Cleaned up temp logo: {logo_path}")
+            except Exception:
+                pass
+
 @app.post("/generate-topic-reel", response_model=ReelResponse)
 async def generate_topic_reel(topic_input: TopicInput):
     """
@@ -659,8 +762,13 @@ async def clear_all_files():
         raise HTTPException(status_code=500, detail=f"Failed to clear files: {str(e)}")
 
 @app.get("/")
-async def serve_frontend():
-    """Serve the main frontend"""
+async def serve_landing():
+    """Serve the Meimetic landing page"""
+    return FileResponse("static/landing.html")
+
+@app.get("/app")
+async def serve_app():
+    """Serve the Brand Repurposing Tool"""
     return FileResponse("static/index.html")
 
 @app.get("/health")
